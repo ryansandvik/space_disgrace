@@ -8,8 +8,11 @@ public class Rocket : MonoBehaviour {
     Rigidbody rigidBody;
     AudioSource audioSource;
 
-	// Use this for initialization
-	void Start ()
+    [SerializeField] float rcsThrust = 50f;
+    [SerializeField] float mainThrust = 50f;
+
+    // Use this for initialization
+    void Start ()
     {
         rigidBody = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
@@ -18,14 +21,34 @@ public class Rocket : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-        ProcessInput();
-	}
+        Rotate();
+        Thrust();
+    }
 
-    private void ProcessInput()
+    private void Rotate()
     {
-        if(Input.GetKey(KeyCode.E))
+        float rotationThisFrame = rcsThrust * Time.deltaTime;
+
+        rigidBody.freezeRotation = true;
+
+        if (Input.GetKey(KeyCode.W))
         {
-            rigidBody.AddRelativeForce(Vector3.up);
+            transform.Rotate(Vector3.forward * rotationThisFrame);
+        }
+        else if (Input.GetKey(KeyCode.R))
+        {
+            transform.Rotate(-Vector3.forward * rotationThisFrame);
+        }
+
+        rigidBody.freezeRotation = false;
+    }
+
+    private void Thrust()
+    {
+        float thrustThisFrame = mainThrust * Time.deltaTime;
+        if (Input.GetKey(KeyCode.E))
+        {
+            rigidBody.AddRelativeForce(Vector3.up * thrustThisFrame);
             if (!audioSource.isPlaying)
             {
                 audioSource.Play();
@@ -35,13 +58,21 @@ public class Rocket : MonoBehaviour {
         {
             audioSource.Stop();
         }
-        if (Input.GetKey(KeyCode.W))
+    }
+    
+    void OnCollisionEnter(Collision collision)
+    {
+        switch (collision.gameObject.tag)
         {
-            transform.Rotate(Vector3.forward);
-        }
-        else if (Input.GetKey(KeyCode.R))
-        {
-            transform.Rotate(-Vector3.forward);
+            case "Friendly":
+                print("Friendly");
+                break;
+            case "Fuel":
+                print("Fuel");
+                break;
+            default:
+                print("Dead");
+                break;
         }
     }
 }
